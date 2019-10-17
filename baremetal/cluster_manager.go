@@ -27,8 +27,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	capbm "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha2"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha2"
+	capbm "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"

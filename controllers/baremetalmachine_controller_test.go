@@ -29,10 +29,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/klogr"
-	infrav1 "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-baremetal/baremetal"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha2"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -240,7 +240,7 @@ var _ = Describe("Reconcile Baremetalcluster", func() {
 				Name:      machineName,
 				Namespace: namespaceName,
 				Labels: map[string]string{
-					clusterv1.MachineClusterLabelName: clusterName,
+					clusterv1.ClusterLabelName: clusterName,
 				},
 			},
 			Spec: clusterv1.MachineSpec{
@@ -296,7 +296,7 @@ var _ = Describe("Reconcile Baremetalcluster", func() {
 				Name:      machineName,
 				Namespace: namespaceName,
 				Labels: map[string]string{
-					clusterv1.MachineClusterLabelName: clusterName,
+					clusterv1.ClusterLabelName: clusterName,
 				},
 			},
 			Spec: clusterv1.MachineSpec{
@@ -352,7 +352,7 @@ var _ = Describe("Reconcile Baremetalcluster", func() {
 				Name:      machineName,
 				Namespace: namespaceName,
 				Labels: map[string]string{
-					clusterv1.MachineClusterLabelName: clusterName,
+					clusterv1.ClusterLabelName: clusterName,
 				},
 			},
 			Spec: clusterv1.MachineSpec{
@@ -414,7 +414,7 @@ var _ = Describe("Reconcile Baremetalcluster", func() {
 				Name:      machineName,
 				Namespace: namespaceName,
 				Labels: map[string]string{
-					clusterv1.MachineClusterLabelName: clusterName,
+					clusterv1.ClusterLabelName: clusterName,
 				},
 			},
 			Spec: clusterv1.MachineSpec{
@@ -630,7 +630,7 @@ func newMachine(clusterName, machineName string, baremetalMachine *infrav1.BareM
 			Name:      machineName,
 			Namespace: namespaceName,
 			Labels: map[string]string{
-				clusterv1.MachineClusterLabelName: clusterName,
+				clusterv1.ClusterLabelName: clusterName,
 			},
 		},
 	}

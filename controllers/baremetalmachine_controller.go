@@ -25,9 +25,9 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	capbm "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha2"
+	capbm "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-baremetal/baremetal"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha2"
+	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -89,7 +89,7 @@ func (r *BareMetalMachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		return ctrl.Result{}, err
 	}
 	if cluster == nil {
-		machineLog.Info(fmt.Sprintf("Please associate this machine with a cluster using the label %s: <name of cluster>", capi.MachineClusterLabelName))
+		machineLog.Info(fmt.Sprintf("Please associate this machine with a cluster using the label %s: <name of cluster>", capi.ClusterLabelName))
 		return ctrl.Result{}, nil
 	}
 
@@ -257,7 +257,7 @@ func (r *BareMetalMachineReconciler) BareMetalClusterToBareMetalMachines(o handl
 		return result
 	}
 
-	labels := map[string]string{capi.MachineClusterLabelName: cluster.Name}
+	labels := map[string]string{capi.ClusterLabelName: cluster.Name}
 	capiMachineList := &capi.MachineList{}
 	if err := r.Client.List(context.TODO(), capiMachineList, client.InNamespace(c.Namespace), client.MatchingLabels(labels)); err != nil {
 		log.Error(err, "failed to list BareMetalMachines")
