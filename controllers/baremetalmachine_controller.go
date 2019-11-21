@@ -86,7 +86,7 @@ func (r *BareMetalMachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		}
 	}()
 	//clear an error if one was previously set
-	clearErrorBMMachine(capbmMachine)
+	clearError(capbmMachine)
 
 	// Fetch the Machine.
 	capiMachine, err := util.GetOwnerMachine(ctx, r.Client, capbmMachine.ObjectMeta)
@@ -106,7 +106,9 @@ func (r *BareMetalMachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 	if err != nil {
 		er := errors.New("BareMetalMachine's owner Machine is missing cluster label or cluster does not exist")
 		machineLog.Info("BareMetalMachine's owner Machine is missing cluster label or cluster does not exist")
-		setErrorBMMachine(capbmMachine, er, capierrors.InvalidConfigurationMachineError)
+
+		// To Be: setError(capbmMachine, er, capierrors.InvalidConfigurationMachineError)
+		setError(capbmMachine, er, capierrors.InvalidConfigurationMachineError, capierrors.InvalidConfigurationClusterError)
 
 		return ctrl.Result{}, errors.Wrapf(err, "BareMetalMachine's owner Machine is missing label or the cluster does not exist")
 	}
@@ -186,7 +188,8 @@ func (r *BareMetalMachineReconciler) reconcileNormal(ctx context.Context,
 		err := machineMgr.Associate(ctx)
 		if err != nil {
 			er := errors.Wrap(err, "failed to associate the BareMetalMachine to a BaremetalHost")
-			setErrorBMMachine(machineMgr.BareMetalMachine, er, capierrors.CreateMachineError)
+			// To Be: setError(machineMgr.BareMetalMachine, er, capierrors.CreateMachineError)
+			setError(machineMgr.BareMetalMachine, er, capierrors.CreateMachineError, capierrors.CreateClusterError)
 			return ctrl.Result{}, er
 		}
 	}
@@ -198,7 +201,8 @@ func (r *BareMetalMachineReconciler) reconcileNormal(ctx context.Context,
 			return ctrl.Result{Requeue: true, RequeueAfter: requeueErr.GetRequeueAfter()}, nil
 		}
 		er := errors.Wrap(err, "failed to get the providerID for the BaremetalMachine")
-		setErrorBMMachine(machineMgr.BareMetalMachine, er, capierrors.CreateMachineError)
+		// To Be: setError(machineMgr.BareMetalMachine, er, capierrors.CreateMachineError)
+		setError(machineMgr.BareMetalMachine, er, capierrors.CreateMachineError, capierrors.CreateClusterError)
 		return ctrl.Result{}, er
 	}
 	if providerID != nil {
@@ -225,7 +229,8 @@ func (r *BareMetalMachineReconciler) reconcileDelete(ctx context.Context,
 		}
 
 		er := errors.Wrap(err, "failed to delete BareMetalMachine")
-		setErrorBMMachine(machineMgr.BareMetalMachine, er, capierrors.DeleteMachineError)
+		// To Be: setError(machineMgr.BareMetalMachine, er, capierrors.DeleteMachineError)
+		setError(machineMgr.BareMetalMachine, er, capierrors.DeleteMachineError, capierrors.DeleteClusterError)
 		return ctrl.Result{}, er
 	}
 
@@ -279,7 +284,8 @@ func (r *BareMetalMachineReconciler) BareMetalClusterToBareMetalMachines(o handl
 
 		er := errors.New("failed to get owning cluster")
 		log.Error(err, "failed to get owning cluster")
-		setErrorBMCluster(c, er, capierrors.InvalidConfigurationClusterError)
+		// To Do: setErrorBMCluster(c, er, capierrors.InvalidConfigurationClusterError)
+		setError(c, er, capierrors.CreateMachineError, capierrors.InvalidConfigurationClusterError)
 		return result
 	}
 
@@ -321,19 +327,62 @@ func (r *BareMetalMachineReconciler) BareMetalHostToBareMetalMachines(obj handle
 }
 
 // setError sets the ErrorMessage and ErrorReason fields on the baremetalmachine
-func setErrorBMMachine(bmm *capbm.BareMetalMachine, message error, reason capierrors.MachineStatusError) {
-
-	bmm.Status.ErrorMessage = pointer.StringPtr(message.Error())
-	bmm.Status.ErrorReason = &reason
-
+// To Do: (a) shorten the code,
+//        (b) pass the reason as interface as well.
+//            - i.e. replace machineReason and clusterReason by ONE interface arg
+func setError(resource interface{}, message error, machineReason capierrors.MachineStatusError, clusterReason capierrors.ClusterStatusError) {
+	switch v := resource.(type) {
+	case capbm.BareMetalMachine:
+		b := capbm.BareMetalMachine(v)
+		b.Status.ErrorMessage = pointer.StringPtr(message.Error())
+		b.Status.ErrorReason = &machineReason
+	case capbm.BareMetalCluster:
+		b := capbm.BareMetalCluster(v)
+		b.Status.ErrorMessage = pointer.StringPtr(message.Error())
+		b.Status.ErrorReason = &clusterReason
+	case capi.Machine:
+		b := capi.Machine(v)
+		b.Status.ErrorMessage = pointer.StringPtr(message.Error())
+		b.Status.ErrorReason = &machineReason
+	case capi.Cluster:
+		b := capi.Cluster(v)
+		b.Status.ErrorMessage = pointer.StringPtr(message.Error())
+		b.Status.ErrorReason = &clusterReason
+	}
 }
 
 // clearError removes the ErrorMessage from the baremetalmachine's Status if set.
-func clearErrorBMMachine(bmm *capbm.BareMetalMachine) {
+// To Do: Minimize the code
+func clearError(resource interface{}) {
 
-	if bmm.Status.ErrorMessage != nil || bmm.Status.ErrorReason != nil {
-		bmm.Status.ErrorMessage = nil
-		bmm.Status.ErrorReason = nil
+	switch v := resource.(type) {
+	case capbm.BareMetalMachine:
+		b := capbm.BareMetalMachine(v)
+		if b.Status.ErrorMessage != nil || b.Status.ErrorReason != nil {
+
+			b.Status.ErrorReason = nil
+			b.Status.ErrorMessage = nil
+		}
+	case capbm.BareMetalCluster:
+		b := capbm.BareMetalCluster(v)
+		if b.Status.ErrorMessage != nil || b.Status.ErrorReason != nil {
+
+			b.Status.ErrorReason = nil
+			b.Status.ErrorMessage = nil
+		}
+	case capi.Machine:
+		b := capi.Machine(v)
+		if b.Status.ErrorMessage != nil || b.Status.ErrorReason != nil {
+
+			b.Status.ErrorReason = nil
+			b.Status.ErrorMessage = nil
+		}
+	case capi.Cluster:
+		b := capi.Cluster(v)
+		if b.Status.ErrorMessage != nil || b.Status.ErrorReason != nil {
+
+			b.Status.ErrorReason = nil
+			b.Status.ErrorMessage = nil
+		}
 	}
-
 }

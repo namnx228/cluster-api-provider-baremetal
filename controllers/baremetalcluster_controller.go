@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/utils/pointer"
 
 	capbm "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha2"
 	"sigs.k8s.io/cluster-api-provider-baremetal/baremetal"
@@ -68,7 +67,8 @@ func (r *BareMetalClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 	if err := r.Client.Get(ctx, req.NamespacedName, baremetalCluster); err != nil {
 		if apierrors.IsNotFound(err) {
 			er := errors.New("Unable to get owner cluster")
-			setErrorBMCluster(baremetalCluster, er, capierrors.InvalidConfigurationClusterError)
+			// To Be: setError(baremetalCluster, er, capierrors.InvalidConfigurationClusterError)
+			setError(baremetalCluster, er, capierrors.InvalidConfigurationMachineError, capierrors.InvalidConfigurationClusterError)
 			return ctrl.Result{}, nil
 		}
 
@@ -87,12 +87,13 @@ func (r *BareMetalClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		}
 	}()
 	// clear an error if one was previously set
-	clearErrorBMCluster(baremetalCluster)
+	clearError(baremetalCluster)
 	// Fetch the Cluster.
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, baremetalCluster.ObjectMeta)
 	if err != nil {
 		er := errors.New("Unable to get owner cluster")
-		setErrorBMCluster(baremetalCluster, er, capierrors.InvalidConfigurationClusterError)
+		// To Be: setError(baremetalCluster, er, capierrors.InvalidConfigurationClusterError)
+		setError(baremetalCluster, er, capierrors.InvalidConfigurationMachineError, capierrors.InvalidConfigurationClusterError)
 		return ctrl.Result{}, err
 	}
 	if cluster == nil {
@@ -128,14 +129,15 @@ func reconcileNormal(ctx context.Context, clusterMgr *baremetal.ClusterManager) 
 	//Create the baremetal cluster (no-op)
 	if err := clusterMgr.Create(ctx); err != nil {
 		er := errors.New("failed to create the cluster")
-		setErrorBMCluster(clusterMgr.BareMetalCluster, er, capierrors.InvalidConfigurationClusterError)
+		// To Do: setError(clusterMgr.BareMetalCluster, er, capierrors.InvalidConfigurationClusterError)
+		setError(clusterMgr.BareMetalCluster, er, capierrors.InvalidConfigurationMachineError, capierrors.InvalidConfigurationClusterError)
 		return ctrl.Result{}, err
 	}
 
 	// Set APIEndpoints so the Cluster API Cluster Controller can pull it
 	if err := clusterMgr.UpdateClusterStatus(); err != nil {
 		er := errors.New("failed to get ip for the API endpoint")
-		setErrorBMCluster(clusterMgr.BareMetalCluster, er, capierrors.InvalidConfigurationClusterError)
+		setError(clusterMgr.BareMetalCluster, er, capierrors.InvalidConfigurationMachineError, capierrors.InvalidConfigurationClusterError)
 
 		return ctrl.Result{}, errors.Wrap(err, "failed to get ip for the API endpoint")
 	}
@@ -166,7 +168,8 @@ func (r *BareMetalClusterReconciler) reconcileDelete(ctx context.Context,
 
 	if err := clusterMgr.Delete(); err != nil {
 		er := errors.New("failed to delete BareMetalCluster")
-		setErrorBMCluster(clusterMgr.BareMetalCluster, er, capierrors.DeleteClusterError)
+		// To Do: setError(clusterMgr.BareMetalCluster, er, capierrors.DeleteClusterError)
+		setError(clusterMgr.BareMetalCluster, er, capierrors.DeleteMachineError, capierrors.DeleteClusterError)
 
 		return ctrl.Result{}, errors.Wrap(err, "failed to delete BareMetalCluster")
 	}
@@ -230,22 +233,4 @@ func (r *BareMetalClusterReconciler) listDescendants(ctx context.Context,
 	}
 
 	return descendants, nil
-}
-
-// setError sets the ErrorMessage and ErrorReason fields on the baremetalcluster
-func setErrorBMCluster(bmc *capbm.BareMetalCluster, message error, reason capierrors.ClusterStatusError) {
-
-	bmc.Status.ErrorMessage = pointer.StringPtr(message.Error())
-	bmc.Status.ErrorReason = &reason
-
-}
-
-// clearError removes the ErrorMessage from the baremetalcluster's Status if set.
-func clearErrorBMCluster(bmc *capbm.BareMetalCluster) {
-
-	if bmc.Status.ErrorMessage != nil || bmc.Status.ErrorReason != nil {
-		bmc.Status.ErrorMessage = nil
-		bmc.Status.ErrorReason = nil
-	}
-
 }
