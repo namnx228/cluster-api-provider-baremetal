@@ -37,6 +37,7 @@ export SSH_KEY_NAME="${SSH_KEY_NAME:-default}"
 COMPONENTS_CLUSTER_API_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-cluster-api.yaml
 COMPONENTS_KUBEADM_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-kubeadm.yaml
 COMPONENTS_BAREMETAL_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-baremetal.yaml
+COMPONENTS_BAREMETAL_OPERATOR_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-baremetal_operator.yaml
 
 PROVIDER_COMPONENTS_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
 CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
@@ -109,6 +110,10 @@ echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 # Generate Kubeadm Bootstrap Provider components file.
 kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm/config/default/?ref=master" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE}"
+
+# Generate Baremetal Operator Provider components file.
+kustomize build "github.com/metal3-io/baremetal-operator/deploy/?ref=master" > "${COMPONENTS_BAREMETAL_OPERATOR_GENERATED_FILE}"
+echo "Generated ${COMPONENTS_BAREMETAL_OPERATOR_GENERATED_FILE}"
 
 # Generate BAREMETAL Infrastructure Provider components file.
 kustomize build "${SOURCE_DIR}/../config/default" | envsubst > "${COMPONENTS_BAREMETAL_GENERATED_FILE}"

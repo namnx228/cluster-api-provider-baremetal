@@ -4,5 +4,7 @@ resources:
 - provider-components-kubeadm.yaml
 - provider-components-cluster-api.yaml
 - provider-components-baremetal.yaml
+- provider-components-baremetal_operator.yaml
 patchesStrategicMerge:
 - manager_tolerations_patch.yaml
+namespace: metal3

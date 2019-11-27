@@ -264,6 +264,9 @@ manifests: generate-manifests $(KUSTOMIZE)
 		-o examples/provider-components/provider-components-kubeadm.yaml
 	$(KUSTOMIZE) build "github.com/kubernetes-sigs/cluster-api/config/default/?ref=release-0.2" \
 		-o examples/provider-components/provider-components-cluster-api.yaml
+	$(KUSTOMIZE) build "github.com/metal3-io/baremetal-operator/deploy/?ref=master" \
+		-o examples/provider-components/provider-components-baremetal_operator.yaml
+
 
 unit: manifests
 	go test ./api/... ./controllers/... ./baremetal/... -coverprofile cover.out
