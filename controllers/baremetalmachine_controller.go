@@ -300,17 +300,17 @@ func (r *BareMetalMachineReconciler) BareMetalHostToBareMetalMachines(obj handle
 // setError sets the ErrorMessage and ErrorReason fields on the baremetalmachine
 func setErrorBMMachine(bmm *capbm.BareMetalMachine, message string, reason capierrors.MachineStatusError) {
 
-	bmm.Status.ErrorMessage = pointer.StringPtr(message)
-	bmm.Status.ErrorReason = &reason
+	bmm.Status.FailureMessage = pointer.StringPtr(message)
+	bmm.Status.FailureReason = &reason
 
 }
 
 // clearError removes the ErrorMessage from the baremetalmachine's Status if set.
 func clearErrorBMMachine(bmm *capbm.BareMetalMachine) {
 
-	if bmm.Status.ErrorMessage != nil || bmm.Status.ErrorReason != nil {
-		bmm.Status.ErrorMessage = nil
-		bmm.Status.ErrorReason = nil
+	if bmm.Status.FailureMessage != nil || bmm.Status.FailureReason != nil {
+		bmm.Status.FailureMessage = nil
+		bmm.Status.FailureReason = nil
 	}
 
 }

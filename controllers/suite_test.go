@@ -29,7 +29,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
-	infrastructurev1alphax "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha3"
 
 	bmh "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha3"
@@ -122,7 +121,10 @@ var deletionTimestamp = metav1.Now()
 
 func bmcSpec() *infrav1.BareMetalClusterSpec {
 	return &infrav1.BareMetalClusterSpec{
-		APIEndpoint:     "http://192.168.111.249:6443",
+		ControlPlaneEndpoint: infrav1.APIEndpoint{
+			Host: "192.168.111.249",
+			Port: 6443,
+		},
 		NoCloudProvider: true,
 	}
 }
@@ -218,7 +220,7 @@ func newMachine(clusterName, machineName string, bareMetalMachineName string) *c
 			Name:      machineName,
 			Namespace: namespaceName,
 			Labels: map[string]string{
-				clusterv1.MachineClusterLabelName: clusterName,
+				clusterv1.ClusterLabelName: clusterName,
 			},
 		},
 	}

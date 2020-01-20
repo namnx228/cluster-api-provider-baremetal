@@ -18,7 +18,6 @@ package v1alpha3
 
 import (
 	"fmt"
-	"net/url"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
@@ -32,23 +31,31 @@ const (
 
 // BareMetalClusterSpec defines the desired state of BareMetalCluster.
 type BareMetalClusterSpec struct {
-	APIEndpoint string `json:"apiEndpoint"`
+	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+	// +optional
+	ControlPlaneEndpoint APIEndpoint `json:"controlPlaneEndpoint"`
+	NoCloudProvider      bool        `json:"noCloudProvider,omitempty"`
 }
 
 // IsValid returns an error if the object is not valid, otherwise nil. The
 // string representation of the error is suitable for human consumption.
 func (s *BareMetalClusterSpec) IsValid() error {
 	missing := []string{}
-	if s.APIEndpoint == "" {
-		missing = append(missing, "APIEndpoint")
+	if s.ControlPlaneEndpoint.Host == "" {
+		missing = append(missing, "ControlPlaneEndpoint.Host")
 	}
+
+	if s.ControlPlaneEndpoint.Port == 0 {
+		missing = append(missing, "ControlPlaneEndpoint.Host")
+	}
+
 	if len(missing) > 0 {
 		return fmt.Errorf("Missing fields from Spec: %v", missing)
 	}
-	u, err := url.Parse(s.APIEndpoint)
-	if err != nil || u.Hostname() == "" {
-		return fmt.Errorf("Incorrect API endpoint, expecting [scheme:]//host[:port]")
-	}
+	//u, err := url.Parse(s.APIEndpoint)
+	//if err != nil || u.Hostname() == "" {
+	//	return fmt.Errorf("Incorrect API endpoint, expecting [scheme:]//host[:port]")
+	//}
 	return nil
 }
 
@@ -58,53 +65,22 @@ type BareMetalClusterStatus struct {
 	// +optional
 	LastUpdated *metav1.Time `json:"lastUpdated,omitempty"`
 
-	// ErrorReason will be set in the event that there is a terminal problem
-	// reconciling the BaremetalMachine and will contain a succinct value suitable
-	// for machine interpretation.
-	//
-	// This field should not be set for transitive errors that a controller
-	// faces that are expected to be fixed automatically over
-	// time (like service outages), but instead indicate that something is
-	// fundamentally wrong with the BaremetalMachine's spec or the configuration
-	// of the controller, and that manual intervention is required. Examples
-	// of terminal errors would be invalid combinations of settings in the
-	// spec, values that are unsupported by the controller, or the
-	// responsible controller itself being critically misconfigured.
-	//
-	// Any transient errors that occur during the reconciliation of Machines
-	// can be added as events to the BaremetalMachine object and/or logged in the
-	// controller's output.
+	// FailureReason indicates that there is a fatal problem reconciling the
+	// state, and will be set to a token value suitable for
+	// programmatic interpretation.
 	// +optional
-	ErrorReason *capierrors.ClusterStatusError `json:"errorReason,omitempty"`
+	FailureReason *capierrors.ClusterStatusError `json:"failureReason,omitempty"`
 
-	// ErrorMessage will be set in the event that there is a terminal problem
-	// reconciling the BaremetalMachine and will contain a more verbose string suitable
-	// for logging and human consumption.
-	//
-	// This field should not be set for transitive errors that a controller
-	// faces that are expected to be fixed automatically over
-	// time (like service outages), but instead indicate that something is
-	// fundamentally wrong with the BaremetalMachine's spec or the configuration of
-	// the controller, and that manual intervention is required. Examples
-	// of terminal errors would be invalid combinations of settings in the
-	// spec, values that are unsupported by the controller, or the
-	// responsible controller itself being critically misconfigured.
-	//
-	// Any transient errors that occur during the reconciliation of Machines
-	// can be added as events to the BaremetalMachine object and/or logged in the
-	// controller's output.
+	// FailureMessage indicates that there is a fatal problem reconciling the
+	// state, and will be set to a descriptive error message.
 	// +optional
-	ErrorMessage *string `json:"errorMessage,omitempty"`
+	FailureMessage *string `json:"failureMessage,omitempty"`
 
 	// Ready denotes that the baremetal cluster (infrastructure) is ready. In
 	// Baremetal case, it does not mean anything for now as no infrastructure
 	// steps need to be performed. Required by Cluster API. Set to True by the
 	// BaremetalCluster controller after creation.
 	Ready bool `json:"ready"`
-
-	// APIEndpoints represents the endpoints to communicate with the control plane.
-	// +optional
-	APIEndpoints []APIEndpoint `json:"apiEndpoints,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -112,6 +88,8 @@ type BareMetalClusterStatus struct {
 // +kubebuilder:storageversion
 // +kubebuilder:subresource:status
 // +kubebuilder:object:root=true
+// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="BaremetalCluster is Ready"
+// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.failureReason",description="Most recent error"
 
 // BareMetalCluster is the Schema for the baremetalclusters API
 type BareMetalCluster struct {

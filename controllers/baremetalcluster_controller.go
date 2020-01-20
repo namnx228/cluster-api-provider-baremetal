@@ -88,8 +88,8 @@ func (r *BareMetalClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, baremetalCluster.ObjectMeta)
 	if err != nil {
 		error := capierrors.InvalidConfigurationClusterError
-		baremetalCluster.Status.ErrorReason = &error
-		baremetalCluster.Status.ErrorMessage = pointer.StringPtr("Unable to get owner cluster")
+		baremetalCluster.Status.FailureReason = &error
+		baremetalCluster.Status.FailureMessage = pointer.StringPtr("Unable to get owner cluster")
 		return ctrl.Result{}, err
 	}
 	if cluster == nil {

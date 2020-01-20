@@ -40,6 +40,7 @@ type HostSelector struct {
 	MatchExpressions []HostSelectorRequirement `json:"matchExpressions,omitempty"`
 }
 
+// HostSelectorRequirement struct
 type HostSelectorRequirement struct {
 	Key      string             `json:"key"`
 	Operator selection.Operator `json:"operator"`
