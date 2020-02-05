@@ -216,6 +216,12 @@ func (m *MachineManager) Associate(ctx context.Context) error {
 		m.Log.Info("Machine already associated with host", "host", host.Name)
 	}
 
+	bootstrapReady := m.IsBootstrapReady()
+	if bootstrapReady != true {
+		m.Log.Info("Bootstrap not Ready. Requeuing.")
+		return &RequeueAfterError{RequeueAfter: requeueAfter}
+	}
+
 	err = m.mergeUserData(ctx)
 	if err != nil {
 		m.setError("Failed to set the UserData for the BareMetalMachine",
@@ -246,6 +252,17 @@ func (m *MachineManager) Associate(ctx context.Context) error {
 
 // Merge the UserData from the machine and the user
 func (m *MachineManager) mergeUserData(ctx context.Context) error {
+
+	// if datasecretname is set pass it to userdata
+	if m.Machine.Spec.Bootstrap.DataSecretName != nil {
+		m.BareMetalMachine.Spec.UserData = &corev1.SecretReference{
+			Name:      *m.Machine.Spec.Bootstrap.DataSecretName,
+			Namespace: m.Machine.Namespace,
+		}
+		return nil
+	}
+
+	// if datasecretname is not set
 	if m.Machine.Spec.Bootstrap.Data != nil {
 		decodedUserDataBytes, err := base64.StdEncoding.DecodeString(*m.Machine.Spec.Bootstrap.Data)
 		decodedUserData := string(decodedUserDataBytes)
@@ -360,26 +377,28 @@ func (m *MachineManager) Delete(ctx context.Context) error {
 		}
 	}
 
-	m.Log.Info("Deleting User data secret for machine")
-	tmpBootstrapSecret := corev1.Secret{}
-	key := client.ObjectKey{
-		Name:      m.BareMetalMachine.Name + "-user-data",
-		Namespace: m.BareMetalMachine.Namespace,
-	}
-	err = m.client.Get(ctx, key, &tmpBootstrapSecret)
-	if err != nil && !apierrors.IsNotFound(err) {
-		m.setError("Failed to delete BareMetalMachine",
-			capierrors.DeleteMachineError,
-		)
-		return err
-	} else if err == nil {
-		// Delete the secret with use data
-		err = m.client.Delete(ctx, &tmpBootstrapSecret)
-		if err != nil {
+	if m.Machine.Spec.Bootstrap.DataSecretName == nil {
+		m.Log.Info("Deleting User data secret for machine")
+		tmpBootstrapSecret := corev1.Secret{}
+		key := client.ObjectKey{
+			Name:      m.BareMetalMachine.Name + "-user-data",
+			Namespace: m.BareMetalMachine.Namespace,
+		}
+		err = m.client.Get(ctx, key, &tmpBootstrapSecret)
+		if err != nil && !apierrors.IsNotFound(err) {
 			m.setError("Failed to delete BareMetalMachine",
 				capierrors.DeleteMachineError,
 			)
 			return err
+		} else if err == nil {
+			// Delete the secret with use data
+			err = m.client.Delete(ctx, &tmpBootstrapSecret)
+			if err != nil {
+				m.setError("Failed to delete BareMetalMachine",
+					capierrors.DeleteMachineError,
+				)
+				return err
+			}
 		}
 	}
 	m.Log.Info("finished deleting bare metal machine")
@@ -624,7 +643,7 @@ func (m *MachineManager) HasAnnotation() bool {
 	return ok
 }
 
-// setError sets the ErrorMessage and ErrorReason fields on the machine and logs
+// setError sets the FailureMessage and FailureReason fields on the machine and logs
 // the message. It assumes the reason is invalid configuration, since that is
 // currently the only relevant MachineStatusError choice.
 func (m *MachineManager) setError(message string, reason capierrors.MachineStatusError) {
