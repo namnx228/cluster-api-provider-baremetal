@@ -26,7 +26,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d // indirect
 	golang.org/x/net v0.0.0-20200226051749-491c5fce7268
 	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae // indirect
-	k8s.io/api v0.17.3
+	k8s.io/api v0.20.4
 	k8s.io/apiextensions-apiserver v0.17.3
 	k8s.io/apimachinery v0.17.3
 	k8s.io/client-go v11.0.0+incompatible
