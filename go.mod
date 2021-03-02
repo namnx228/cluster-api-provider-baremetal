@@ -10,7 +10,7 @@ require (
 	github.com/go-openapi/spec v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.7 // indirect
 	github.com/golang/mock v1.4.0
-	github.com/google/gofuzz v1.1.0
+	github.com/google/gofuzz v1.2.0
 	github.com/googleapis/gnostic v0.4.1 // indirect
 	github.com/gophercloud/gophercloud v0.3.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
