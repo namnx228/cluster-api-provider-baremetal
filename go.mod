@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
-	github.com/metal3-io/baremetal-operator v0.0.0-20200225121200-8161ce57c5af
+	github.com/metal3-io/baremetal-operator 84bde45862d0
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/pkg/errors v0.9.1
