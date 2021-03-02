@@ -33,7 +33,7 @@ require (
 	k8s.io/cluster-bootstrap v0.17.3 // indirect
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe // indirect
-	k8s.io/utils v0.0.0-20200124190032-861946025e34
+	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
 	sigs.k8s.io/cluster-api v0.3.0-rc.0.0.20200216171528-7eead355bcbc
 	sigs.k8s.io/controller-runtime v0.5.0
 	sigs.k8s.io/testing_frameworks v0.1.2 // indirect
